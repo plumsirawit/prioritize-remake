@@ -1,9 +1,9 @@
-import React, { useState, useEffect, Fragment } from 'react';
+import React, { useState, useEffect, Fragment, createRef, RefObject } from 'react';
 import Draggable, { DraggableCore, ControlPosition } from 'react-draggable';
 import firebaseConfig from '../firebase-config.json';
 import firebase, { FirebaseError } from 'firebase';
 import Router from 'next/router';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, DialogContentText, TextField, Popover, Typography, makeStyles, createStyles, Theme, useMediaQuery, useTheme } from '@material-ui/core';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, DialogContentText, TextField, Popover, Typography, makeStyles, createStyles, Theme, useMediaQuery, useTheme, Checkbox } from '@material-ui/core';
 
 const VerticalLine = () => <div style={{ borderLeft: "2px solid black", height: "100%", position: "absolute", left: "50%", top: "0%" }}></div>;
 const HorizontalLine = () => <div style={{ borderTop: "2px solid black", width: "100%", position: "absolute", left: "0%", top: "50%" }}></div>;
@@ -52,22 +52,28 @@ const TaskItem = (props) => {
 	}
 	const [currentTaskName, setCurrenntTaskName] = useState(props.data.name || "");
 	const [currentTaskDescs, setCurrentTaskDescs] = useState(props.data.descs || "");
+	const [currentTaskColor, setCurrentTaskColor] = useState(props.data.color || "#FFFFFF");
 	const handleDialogClose = (confirm) => {
 		setDialogOpen(false);
-		if (confirm) {
-			props.updateDB(props.docId, { name: currentTaskName, descs: currentTaskDescs });
+		if (confirm === "update") {
+			props.updateDB(props.docId, { name: currentTaskName, descs: currentTaskDescs, color: currentTaskColor });
+		} else if (confirm === "destroy") {
+			props.deleteDB(props.docId);
 		}
 	}
-	const handleHover = (e) => setAnchorEl(e.currentTarget);
-	const handleOut = () => setAnchorEl(null);
-	const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null);
-	const showInfo = Boolean(anchorEl);
+	const [isHovering, setIsHovering] = useState<boolean>(false);
+	const handleHover = () => setIsHovering(true);
+	const handleOut = () => setIsHovering(false);
+	let anchorEl: RefObject<HTMLAnchorElement> = createRef();
+	const showInfo: boolean = isHovering || props.forceShowInfo;
 	return <Fragment>
 		<Draggable position={currentPos} onStart={handleStart} onDrag={handleDrag} onStop={handleStop}>
 			<Button className={classes.pinButton}
 				variant="contained"
 				onMouseOver={handleHover}
-				onMouseLeave={handleOut}> </Button>
+				onMouseLeave={handleOut}
+				href=""
+				ref={anchorEl}> </Button>
 		</Draggable>
 		<Dialog open={dialogOpen} onClose={() => handleDialogClose(false)} aria-labelledby="form-dialog-title" fullScreen={useMediaQuery(theme.breakpoints.down('sm'))}>
 			<DialogTitle id="form-dialog-title">Edit Task</DialogTitle>
@@ -96,14 +102,29 @@ const TaskItem = (props) => {
 						setCurrentTaskDescs(e.target.value);
 					}}
 				/>
+				<TextField
+					margin="dense"
+					id="color"
+					label="Pin Color"
+					type="text"
+					fullWidth
+					multiline
+					value={currentTaskColor}
+					onChange={(e) => {
+						setCurrentTaskColor(e.target.value);
+					}}
+				/>
 			</DialogContent>
 			<DialogActions>
 				<Button onClick={() => handleDialogClose(false)} color="primary">
 					Cancel
-			</Button>
-				<Button onClick={() => handleDialogClose(true)} color="primary">
+				</Button>
+				<Button onClick={() => handleDialogClose("update")} color="primary">
 					Confirm
-			</Button>
+				</Button>
+				<Button onClick={() => handleDialogClose("destroy")} color="primary">
+					Delete
+				</Button>
 			</DialogActions>
 		</Dialog>
 		<Popover
@@ -112,7 +133,7 @@ const TaskItem = (props) => {
 				paper: classes.paper,
 			}}
 			open={showInfo}
-			anchorEl={anchorEl}
+			anchorEl={() => anchorEl ? anchorEl.current : null}
 			anchorOrigin={{
 				vertical: 'bottom',
 				horizontal: 'center',
@@ -145,17 +166,19 @@ const Board = () => {
 		return true;
 	}
 	const updateDB = (docId, updData) => firebase.firestore().collection('tasks').doc(docId).update(updData);
+	const deleteDB = (docId) => firebase.firestore().collection('tasks').doc(docId).delete();
+	const [forceShowInfo, setForceShowInfo] = useState<boolean>(false);
 	useEffect(() => {
 		if (user && user !== "unknown" && isFirebaseUser(user)) {
 			return firebase.firestore().collection('tasks').where("uid", "==", user.uid).onSnapshot((querySnapshot) => {
 				let curItems = [];
 				querySnapshot.forEach((doc) => {
-					curItems.push(<TaskItem key={doc.id} docId={doc.id} data={doc.data()} updateDB={updateDB} />);
+					curItems.push(<TaskItem key={doc.id} docId={doc.id} data={doc.data()} updateDB={updateDB} deleteDB={deleteDB} forceShowInfo={forceShowInfo}/>);
 				});
 				setItems(curItems);
 			});
 		}
-	}, [user]);
+	}, [user, forceShowInfo]);
 	const addTask = () => {
 		if (user && user !== "unknown" && isFirebaseUser(user)) {
 			firebase.firestore().collection('tasks').add({
@@ -179,6 +202,12 @@ const Board = () => {
 					<HorizontalLine />
 					<button onClick={logout}>Logout</button>
 					<button onClick={addTask}>New</button>
+					<Checkbox
+						checked={forceShowInfo}
+						onChange={(e) => setForceShowInfo(e.target.checked)}
+						value="primary"
+						inputProps={{ 'aria-label': 'primary checkbox' }}
+					/>
 					{items}
 				</div>
 		} </Fragment>;
