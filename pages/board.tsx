@@ -2,12 +2,12 @@ import React, { useState, useEffect, Fragment, createRef, RefObject } from 'reac
 import Draggable, { DraggableCore, ControlPosition } from 'react-draggable';
 import firebase, { FirebaseError } from 'firebase';
 import Router from 'next/router';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, DialogContentText, TextField, Popover, Typography, makeStyles, createStyles, Theme, useMediaQuery, useTheme, Checkbox } from '@material-ui/core';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, DialogContentText, TextField, Popover, Typography, makeStyles, createStyles, Theme, useMediaQuery, useTheme, Checkbox, FormControlLabel } from '@material-ui/core';
 import { useFirebaseUser, logout, updateDB, deleteDB, vmin } from '../helpers/util';
 const VerticalLine = () => <div style={{ borderLeft: "2px solid black", height: "100%", position: "absolute", left: "50%", top: "0%" }}></div>;
 const HorizontalLine = () => <div style={{ borderTop: "2px solid black", width: "100%", position: "absolute", left: "0%", top: "50%" }}></div>;
 class TaskDialog extends React.Component<any, any> {
-	constructor(props){
+	constructor(props) {
 		super(props);
 		this.state = {
 			currentTaskName: props.data.name || "",
@@ -32,7 +32,7 @@ class TaskDialog extends React.Component<any, any> {
 			this.props.setDialogOpen(false);
 		}
 	}
-	currentColorError(){
+	currentColorError() {
 		let re = /#[a-fA-F0-9]{6}/;
 		return this.state.currentTaskColor.length != 7 || !re.test(this.state.currentTaskColor);
 	}
@@ -52,7 +52,7 @@ class TaskDialog extends React.Component<any, any> {
 					fullWidth
 					value={this.state.currentTaskName}
 					onChange={(e) => {
-						this.setState({...this.state, currentTaskName: e.target.value});
+						this.setState({ ...this.state, currentTaskName: e.target.value });
 					}}
 				/>
 				<TextField
@@ -64,7 +64,7 @@ class TaskDialog extends React.Component<any, any> {
 					multiline
 					value={this.state.currentTaskDescs}
 					onChange={(e) => {
-						this.setState({...this.state, currentTaskDescs: e.target.value});
+						this.setState({ ...this.state, currentTaskDescs: e.target.value });
 					}}
 				/>
 				<TextField
@@ -77,7 +77,7 @@ class TaskDialog extends React.Component<any, any> {
 					helperText={this.currentColorError() && "Incorrect color HEX format"}
 					value={this.state.currentTaskColor}
 					onChange={(e) => {
-						this.setState({...this.state, currentTaskColor: e.target.value});
+						this.setState({ ...this.state, currentTaskColor: e.target.value });
 					}}
 				/>
 			</DialogContent>
@@ -95,17 +95,17 @@ class TaskDialog extends React.Component<any, any> {
 		</Dialog>;
 	}
 }
-class TaskPopover extends React.Component<any,any> {
+class TaskPopover extends React.Component<any, any> {
 	constructor(props) {
 		super(props);
 	}
-	componentWillMount(){
+	componentWillMount() {
 		console.log('Popover rerender');
 	}
-	componentWillUpdate(){
+	componentWillUpdate() {
 		console.log('Popover update');
 	}
-	shouldComponentUpdate(nextProps, nextState){
+	shouldComponentUpdate(nextProps, nextState) {
 		return this.props.showInfo !== nextProps.showInfo || this.props.showInfo;
 	}
 	render() {
@@ -116,7 +116,7 @@ class TaskPopover extends React.Component<any,any> {
 			}}
 			open={this.props.showInfo}
 			anchorReference="anchorPosition"
-			anchorPosition={{left: window.innerWidth/2 + this.props.data.x, top: window.innerHeight/2 + this.props.data.y + vmin(1)}}
+			anchorPosition={{ left: window.innerWidth / 2 + this.props.data.x, top: window.innerHeight / 2 + this.props.data.y + vmin(1) }}
 			anchorOrigin={{
 				vertical: 'bottom',
 				horizontal: 'center',
@@ -170,7 +170,7 @@ const TaskItem = (props) => {
 			setDialogOpen(true);
 			return;
 		}
-		setCurrentPos({x: x, y: y});
+		setCurrentPos({ x: x, y: y });
 		props.updateDB(props.docId, { x: x, y: y });
 	}
 	const [isHovering, setIsHovering] = useState<boolean>(false);
@@ -188,8 +188,8 @@ const TaskItem = (props) => {
 				href=""
 			></Button>
 		</Draggable>
-		<TaskDialog data={props.data} docId={props.docId} dialogOpen={dialogOpen} setDialogOpen={setDialogOpen} fullScreen={fullScreen}/>
-		<TaskPopover data={props.data} classes={classes} showInfo={showInfo} handleOut={handleOut}/>
+		<TaskDialog data={props.data} docId={props.docId} dialogOpen={dialogOpen} setDialogOpen={setDialogOpen} fullScreen={fullScreen} />
+		<TaskPopover data={props.data} classes={classes} showInfo={showInfo} handleOut={handleOut} />
 	</Fragment>;
 }
 const Board = () => {
@@ -245,7 +245,7 @@ const Board = () => {
 						borderRadius: "5px",
 						borderStyle: "solid",
 						width: "10vw",
-						minWidth: "100px"
+						minWidth: "200px"
 					}}>
 						<div style={{
 							display: "flex",
@@ -253,24 +253,26 @@ const Board = () => {
 							alignItems: "center",
 							flexDirection: "row"
 						}}>
-							<Checkbox
-								checked={forceShowInfo}
-								onChange={(e) => setForceShowInfo(e.target.checked)}
-								value="primary"
-								inputProps={{ 'aria-label': 'primary checkbox' }}
+							<FormControlLabel
+								control={
+									<Checkbox
+										checked={forceShowInfo}
+										onChange={(e) => setForceShowInfo(e.target.checked)}
+										value="primary"
+										inputProps={{ 'aria-label': 'primary checkbox' }}
+									/>
+								}
+								label="Display Names"
 							/>
-							<Typography variant="caption">
-								Display Names
-							</Typography>
 						</div>
 						<div style={{
 							borderBottomStyle: "solid",
 							width: "100%",
 							marginTop: "2px"
 						}}></div>
-						<Button style={{margin: "5px", width: "16ch"}} variant="outlined" onClick={addTask}>Create</Button>
-						<Button style={{marginBottom: "5px", width: "16ch"}} variant="outlined" onClick={() => Router.push('/about')}>About</Button>
-						<Button style={{width: "16ch"}} color="secondary" variant="outlined" onClick={logout}>Logout</Button>
+						<Button style={{ margin: "5px", width: "16ch" }} variant="outlined" onClick={addTask}>Create</Button>
+						<Button style={{ marginBottom: "5px", width: "16ch" }} variant="outlined" onClick={() => Router.push('/about')}>About</Button>
+						<Button style={{ width: "16ch" }} color="secondary" variant="outlined" onClick={logout}>Logout</Button>
 					</div>
 					{items}
 				</div>
