@@ -28,6 +28,8 @@ class TaskDialog extends React.Component<any, any> {
 		} else if (confirm === "destroy") {
 			this.props.setDialogOpen(false);
 			deleteDB(this.props.docId);
+		} else {
+			this.props.setDialogOpen(false);
 		}
 	}
 	currentColorError(){
