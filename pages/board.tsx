@@ -3,9 +3,127 @@ import Draggable, { DraggableCore, ControlPosition } from 'react-draggable';
 import firebase, { FirebaseError } from 'firebase';
 import Router from 'next/router';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, DialogContentText, TextField, Popover, Typography, makeStyles, createStyles, Theme, useMediaQuery, useTheme, Checkbox } from '@material-ui/core';
-import { useFirebaseUser, logout, updateDB, deleteDB } from '../helpers/util';
+import { useFirebaseUser, logout, updateDB, deleteDB, vmin } from '../helpers/util';
 const VerticalLine = () => <div style={{ borderLeft: "2px solid black", height: "100%", position: "absolute", left: "50%", top: "0%" }}></div>;
 const HorizontalLine = () => <div style={{ borderTop: "2px solid black", width: "100%", position: "absolute", left: "0%", top: "50%" }}></div>;
+class TaskDialog extends React.Component<any, any> {
+	constructor(props){
+		super(props);
+		this.state = {
+			currentTaskName: props.data.name || "",
+			currentTaskDescs: props.data.descs || "",
+			currentTaskColor: props.data.color || "#FFFFFF"
+		}
+	}
+	componentWillMount() {
+		console.log('Dialog Rerender');
+	}
+	componentWillUpdate() {
+		console.log('Dialog Update');
+	}
+	handleDialogClose(confirm) {
+		this.props.setDialogOpen(false);
+		if (confirm === "update") {
+			updateDB(this.props.docId, { name: this.state.currentTaskName, descs: this.state.currentTaskDescs, color: this.state.currentTaskColor });
+		} else if (confirm === "destroy") {
+			deleteDB(this.props.docId);
+		}
+	}
+	shouldComponentUpdate(nextProps, nextState) {
+		return this.state !== nextState || this.props.data !== nextProps.data || this.props.fullScreen !== nextProps.fullScreen || this.props.docId !== nextProps.docId || this.props.dialogOpen !== nextProps.dialogOpen;
+	}
+	render() {
+		return <Dialog open={this.props.dialogOpen} onClose={() => this.handleDialogClose(false)} aria-labelledby="form-dialog-title" fullScreen={this.props.fullScreen}>
+			<DialogTitle id="form-dialog-title">Edit Task</DialogTitle>
+			<DialogContent>
+				<DialogContentText>You can edit task name and description below.</DialogContentText>
+				<TextField
+					margin="dense"
+					id="name"
+					label="Task Name"
+					type="text"
+					fullWidth
+					value={this.state.currentTaskName}
+					onChange={(e) => {
+						this.setState({...this.state, currentTaskName: e.target.value});
+					}}
+				/>
+				<TextField
+					margin="dense"
+					id="descs"
+					label="Task Description"
+					type="text"
+					fullWidth
+					multiline
+					value={this.state.currentTaskDescs}
+					onChange={(e) => {
+						this.setState({...this.state, currentTaskDescs: e.target.value});
+					}}
+				/>
+				<TextField
+					margin="dense"
+					id="color"
+					label="Pin Color"
+					type="text"
+					fullWidth
+					multiline
+					value={this.state.currentTaskColor}
+					onChange={(e) => {
+						this.setState({...this.state, currentTaskColor: e.target.value});
+					}}
+				/>
+			</DialogContent>
+			<DialogActions>
+				<Button onClick={() => this.handleDialogClose(false)} color="primary">
+					Cancel
+		</Button>
+				<Button onClick={() => this.handleDialogClose("update")} color="primary">
+					Confirm
+		</Button>
+				<Button onClick={() => this.handleDialogClose("destroy")} color="primary">
+					Delete
+		</Button>
+			</DialogActions>
+		</Dialog>;
+	}
+}
+class TaskPopover extends React.Component<any,any> {
+	constructor(props) {
+		super(props);
+	}
+	componentWillMount(){
+		console.log('Popover rerender');
+	}
+	componentWillUpdate(){
+		console.log('Popover update');
+	}
+	shouldComponentUpdate(nextProps, nextState){
+		return this.props.showInfo !== nextProps.showInfo || this.props.showInfo;
+	}
+	render() {
+		return <Popover
+			className={this.props.classes.popover}
+			classes={{
+				paper: this.props.classes.paper,
+			}}
+			open={this.props.showInfo}
+			anchorReference="anchorPosition"
+			anchorPosition={{left: window.innerWidth/2 + this.props.data.x, top: window.innerHeight/2 + this.props.data.y + vmin(1)}}
+			anchorOrigin={{
+				vertical: 'bottom',
+				horizontal: 'center',
+			}}
+			transformOrigin={{
+				vertical: 'top',
+				horizontal: 'center',
+			}}
+			onClose={this.props.handleOut}
+			disableRestoreFocus
+		>
+			<Typography>{this.props.data.name}</Typography>
+		</Popover>;
+	}
+}
 const TaskItem = (props) => {
 	const classes = makeStyles((theme: Theme) =>
 		createStyles({
@@ -31,137 +149,54 @@ const TaskItem = (props) => {
 			}
 		}),
 	)();
-	const theme = useTheme();
 	const [currentPos, setCurrentPos] = useState({ x: props.data.x || 0, y: props.data.y || 0 });
-	const handleDrag = (e, position) => {
-		const { x, y } = position;
-		setCurrentPos({ x: x, y: y });
-	};
-	const [lastPos, setLastPos] = useState(currentPos);
-	const handleStart = () => {
-		setLastPos(currentPos);
-	}
+	const [isMouseDown, setIsMouseDown] = useState(false);
 	const [dialogOpen, setDialogOpen] = useState(false);
-	const handleStop = () => {
-		if (lastPos === currentPos) {
+	const handleStart = () => {
+		setIsMouseDown(true);
+	}
+	const handleStop = (e, position) => {
+		setIsMouseDown(false);
+		const { x, y } = position;
+		if (currentPos.x === x && currentPos.y === y) {
 			setDialogOpen(true);
 			return;
 		}
-		props.updateDB(props.docId, { x: currentPos.x, y: currentPos.y });
-	}
-	const [currentTaskName, setCurrenntTaskName] = useState(props.data.name || "");
-	const [currentTaskDescs, setCurrentTaskDescs] = useState(props.data.descs || "");
-	const [currentTaskColor, setCurrentTaskColor] = useState(props.data.color || "#FFFFFF");
-	const handleDialogClose = (confirm) => {
-		setDialogOpen(false);
-		if (confirm === "update") {
-			props.updateDB(props.docId, { name: currentTaskName, descs: currentTaskDescs, color: currentTaskColor });
-		} else if (confirm === "destroy") {
-			props.deleteDB(props.docId);
-		}
+		setCurrentPos({x: x, y: y});
+		props.updateDB(props.docId, { x: x, y: y });
 	}
 	const [isHovering, setIsHovering] = useState<boolean>(false);
 	const handleHover = () => setIsHovering(true);
 	const handleOut = () => setIsHovering(false);
-	let anchorEl: RefObject<HTMLAnchorElement> = createRef();
-	const showInfo: boolean = isHovering || props.forceShowInfo;
+	const showInfo: boolean = (isHovering || props.forceShowInfo) && !isMouseDown;
+	const theme = useTheme();
+	const fullScreen = useMediaQuery(theme.breakpoints.down('sm'))
 	return <Fragment>
-		<Draggable position={currentPos} onStart={handleStart} onDrag={handleDrag} onStop={handleStop}>
+		<Draggable defaultPosition={currentPos} onStart={handleStart} onStop={handleStop}>
 			<Button className={classes.pinButton}
 				variant="contained"
 				onMouseOver={handleHover}
 				onMouseLeave={handleOut}
 				href=""
-				ref={anchorEl}> </Button>
+			></Button>
 		</Draggable>
-		<Dialog open={dialogOpen} onClose={() => handleDialogClose(false)} aria-labelledby="form-dialog-title" fullScreen={useMediaQuery(theme.breakpoints.down('sm'))}>
-			<DialogTitle id="form-dialog-title">Edit Task</DialogTitle>
-			<DialogContent>
-				<DialogContentText>You can edit task name and description below.</DialogContentText>
-				<TextField
-					margin="dense"
-					id="name"
-					label="Task Name"
-					type="text"
-					fullWidth
-					value={currentTaskName}
-					onChange={(e) => {
-						setCurrenntTaskName(e.target.value);
-					}}
-				/>
-				<TextField
-					margin="dense"
-					id="descs"
-					label="Task Description"
-					type="text"
-					fullWidth
-					multiline
-					value={currentTaskDescs}
-					onChange={(e) => {
-						setCurrentTaskDescs(e.target.value);
-					}}
-				/>
-				<TextField
-					margin="dense"
-					id="color"
-					label="Pin Color"
-					type="text"
-					fullWidth
-					multiline
-					value={currentTaskColor}
-					onChange={(e) => {
-						setCurrentTaskColor(e.target.value);
-					}}
-				/>
-			</DialogContent>
-			<DialogActions>
-				<Button onClick={() => handleDialogClose(false)} color="primary">
-					Cancel
-				</Button>
-				<Button onClick={() => handleDialogClose("update")} color="primary">
-					Confirm
-				</Button>
-				<Button onClick={() => handleDialogClose("destroy")} color="primary">
-					Delete
-				</Button>
-			</DialogActions>
-		</Dialog>
-		<Popover
-			className={classes.popover}
-			classes={{
-				paper: classes.paper,
-			}}
-			open={showInfo}
-			anchorEl={() => anchorEl ? anchorEl.current : null}
-			anchorOrigin={{
-				vertical: 'bottom',
-				horizontal: 'center',
-			}}
-			transformOrigin={{
-				vertical: 'top',
-				horizontal: 'center',
-			}}
-			onClose={handleOut}
-			disableRestoreFocus
-		>
-			<Typography>{props.data.name}</Typography>
-		</Popover>
+		<TaskDialog data={props.data} docId={props.docId} dialogOpen={dialogOpen} setDialogOpen={setDialogOpen} fullScreen={fullScreen}/>
+		<TaskPopover data={props.data} classes={classes} showInfo={showInfo} handleOut={handleOut}/>
 	</Fragment>;
 }
 const Board = () => {
 	const user = useFirebaseUser();
 	useEffect(() => {
-		if(user === null) Router.push('/login');
+		if (user === null) Router.push('/login');
 	}, [user]);
 	const [items, setItems] = useState([]);
 	const [forceShowInfo, setForceShowInfo] = useState<boolean>(false);
 	useEffect(() => {
 		if (user) {
 			return firebase.firestore().collection('tasks').where("uid", "==", user.uid).onSnapshot((querySnapshot) => {
-				console.log('Currently on snapshot');
 				let curItems = [];
 				querySnapshot.forEach((doc) => {
-					curItems.push(<TaskItem key={doc.id} docId={doc.id} data={doc.data()} updateDB={updateDB} deleteDB={deleteDB} forceShowInfo={forceShowInfo}/>);
+					curItems.push(<TaskItem key={doc.id} docId={doc.id} data={doc.data()} updateDB={updateDB} deleteDB={deleteDB} forceShowInfo={forceShowInfo} />);
 				});
 				setItems(curItems);
 			});
@@ -182,7 +217,7 @@ const Board = () => {
 		}
 	}
 	return <Fragment>
-		<link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet"/>
+		<link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet" />
 		{
 			!user ? <Fragment /> :
 				<div>
@@ -199,7 +234,7 @@ const Board = () => {
 						alignItems: "center",
 						justifyContent: "center",
 						flexDirection: "column"
-						}}>
+					}}>
 						<Checkbox
 							checked={forceShowInfo}
 							onChange={(e) => setForceShowInfo(e.target.checked)}

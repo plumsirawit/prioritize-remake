@@ -15,3 +15,17 @@ export const logout = () => {
 }
 export const updateDB = (docId, updData) => firebase.firestore().collection('tasks').doc(docId).update(updData);
 export const deleteDB = (docId) => firebase.firestore().collection('tasks').doc(docId).delete();
+export const vh = (v) => {
+    var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+    return (v * h) / 100;
+}
+export const vw = (v) => {
+    var w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+    return (v * w) / 100;
+}
+export const vmin = (v) => {
+    return Math.min(vh(v), vw(v));
+}
+export const vmax = (v) => {
+    return Math.max(vh(v), vw(v));
+}
