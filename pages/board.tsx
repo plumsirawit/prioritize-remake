@@ -202,12 +202,27 @@ const Board = () => {
 					<HorizontalLine />
 					<button onClick={logout}>Logout</button>
 					<button onClick={addTask}>New</button>
-					<Checkbox
-						checked={forceShowInfo}
-						onChange={(e) => setForceShowInfo(e.target.checked)}
-						value="primary"
-						inputProps={{ 'aria-label': 'primary checkbox' }}
-					/>
+					<div style={{
+						right: "0px",
+						top: "0px",
+						margin: "10px",
+						position: "absolute",
+						display: "flex",
+						alignItems: "center",
+						justifyContent: "center",
+						flexDirection: "column"
+						}}>
+						<Checkbox
+							checked={forceShowInfo}
+							onChange={(e) => setForceShowInfo(e.target.checked)}
+							value="primary"
+							inputProps={{ 'aria-label': 'primary checkbox' }}
+						/>
+						<Typography variant="caption">
+							Display Names
+						</Typography>
+					</div>
+					
 					{items}
 				</div>
 		} </Fragment>;
