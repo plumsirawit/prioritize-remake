@@ -22,12 +22,17 @@ class TaskDialog extends React.Component<any, any> {
 		console.log('Dialog Update');
 	}
 	handleDialogClose(confirm) {
-		this.props.setDialogOpen(false);
-		if (confirm === "update") {
+		if (confirm === "update" && !this.currentColorError()) {
+			this.props.setDialogOpen(false);
 			updateDB(this.props.docId, { name: this.state.currentTaskName, descs: this.state.currentTaskDescs, color: this.state.currentTaskColor });
 		} else if (confirm === "destroy") {
+			this.props.setDialogOpen(false);
 			deleteDB(this.props.docId);
 		}
+	}
+	currentColorError(){
+		let re = /#[a-fA-F0-9]{6}/;
+		return this.state.currentTaskColor.length != 7 || !re.test(this.state.currentTaskColor);
 	}
 	shouldComponentUpdate(nextProps, nextState) {
 		return this.state !== nextState || this.props.data !== nextProps.data || this.props.fullScreen !== nextProps.fullScreen || this.props.docId !== nextProps.docId || this.props.dialogOpen !== nextProps.dialogOpen;
@@ -66,7 +71,8 @@ class TaskDialog extends React.Component<any, any> {
 					label="Pin Color"
 					type="text"
 					fullWidth
-					multiline
+					error={this.currentColorError()}
+					helperText={this.currentColorError() && "Incorrect color HEX format"}
 					value={this.state.currentTaskColor}
 					onChange={(e) => {
 						this.setState({...this.state, currentTaskColor: e.target.value});
