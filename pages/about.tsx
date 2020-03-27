@@ -5,9 +5,7 @@ import { Paper, Typography } from '@material-ui/core';
 const About = () => {
 	return <div className="App">
 		<header className="App-header">
-			<style>
-				@import url('https://fonts.googleapis.com/css?family=Roboto&display=swap');
-			</style>
+			<link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet" />
 			<div style={{ opacity: 0 }} className="fadeIn">
 				<div style={{ width: "40vmin", margin: "auto" }}>
 					<Paper elevation={3} style={{ fontSize: 0 }} className="logoPaper">
