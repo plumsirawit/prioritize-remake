@@ -231,27 +231,46 @@ const Board = () => {
 				<div>
 					<VerticalLine />
 					<HorizontalLine />
-					<button onClick={logout}>Logout</button>
-					<button onClick={addTask}>New</button>
 					<div style={{
 						right: "0px",
 						top: "0px",
 						margin: "10px",
+						padding: "5px",
 						position: "absolute",
 						display: "flex",
 						alignItems: "center",
 						justifyContent: "center",
-						flexDirection: "column"
+						flexDirection: "column",
+						background: "white",
+						borderRadius: "5px",
+						borderStyle: "solid",
+						width: "10vw",
+						minWidth: "100px"
 					}}>
-						<Checkbox
-							checked={forceShowInfo}
-							onChange={(e) => setForceShowInfo(e.target.checked)}
-							value="primary"
-							inputProps={{ 'aria-label': 'primary checkbox' }}
-						/>
-						<Typography variant="caption">
-							Display Names
-						</Typography>
+						<div style={{
+							display: "flex",
+							justifyContent: "center",
+							alignItems: "center",
+							flexDirection: "row"
+						}}>
+							<Checkbox
+								checked={forceShowInfo}
+								onChange={(e) => setForceShowInfo(e.target.checked)}
+								value="primary"
+								inputProps={{ 'aria-label': 'primary checkbox' }}
+							/>
+							<Typography variant="caption">
+								Display Names
+							</Typography>
+						</div>
+						<div style={{
+							borderBottomStyle: "solid",
+							width: "100%",
+							marginTop: "2px"
+						}}></div>
+						<Button style={{margin: "5px", width: "16ch"}} variant="outlined" onClick={addTask}>Create</Button>
+						<Button style={{marginBottom: "5px", width: "16ch"}} variant="outlined" onClick={() => Router.push('/about')}>About</Button>
+						<Button style={{width: "16ch"}} color="secondary" variant="outlined" onClick={logout}>Logout</Button>
 					</div>
 					{items}
 				</div>
