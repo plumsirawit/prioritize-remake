@@ -150,26 +150,24 @@ const TaskItem = (props) => {
 	</Fragment>;
 }
 const Board = () => {
-	const [user, setUser]: [String | firebase.User, any] = useState("unknown");
+	const [user, setUser] = useState<firebase.User | undefined | null>(undefined);
 	if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 	useEffect(() => firebase.auth().onAuthStateChanged(function (u) {
+		if(!u) Router.push('/login');
 		setUser(u);
 	}));
-	useEffect(() => {
-		if (!user) Router.push('/login');
-	}, [user]);
 	const logout = () => {
 		firebase.auth().signOut();
 	}
 	const [items, setItems] = useState([]);
-	const isFirebaseUser = (us: String | firebase.User): us is firebase.User => {
-		return true;
+	const isFirebaseUser = (us: firebase.User | undefined | null) => {
+		return us ? true : false;
 	}
 	const updateDB = (docId, updData) => firebase.firestore().collection('tasks').doc(docId).update(updData);
 	const deleteDB = (docId) => firebase.firestore().collection('tasks').doc(docId).delete();
 	const [forceShowInfo, setForceShowInfo] = useState<boolean>(false);
 	useEffect(() => {
-		if (user && user !== "unknown" && isFirebaseUser(user)) {
+		if (user && isFirebaseUser(user)) {
 			return firebase.firestore().collection('tasks').where("uid", "==", user.uid).onSnapshot((querySnapshot) => {
 				let curItems = [];
 				querySnapshot.forEach((doc) => {
@@ -180,7 +178,7 @@ const Board = () => {
 		}
 	}, [user, forceShowInfo]);
 	const addTask = () => {
-		if (user && user !== "unknown" && isFirebaseUser(user)) {
+		if (user && isFirebaseUser(user)) {
 			firebase.firestore().collection('tasks').add({
 				color: "#000000",
 				completed: "false",
@@ -196,7 +194,7 @@ const Board = () => {
 	return <Fragment>
 		<style>@import url('https://fonts.googleapis.com/css?family=Roboto&display=swap');</style>
 		{
-			user === "unknown" || !user ? <Fragment /> :
+			!user ? <Fragment /> :
 				<div>
 					<VerticalLine />
 					<HorizontalLine />

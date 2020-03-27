@@ -4,16 +4,14 @@ import firebaseConfig from '../firebase-config.json';
 import Router from 'next/router';
 
 const Login = () => {
-	const [user, setUser] : [string | firebase.User, any] = useState("unknown");
+	const [user, setUser] = useState<firebase.User | undefined | null>(undefined);
 	if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 	useEffect(() => firebase.auth().onAuthStateChanged(function (us) {
 		setUser(us);
-	}));
-	useEffect(() => {
-		if(user && user !== "unknown"){
+		if(us){
 			Router.push('/board');
 		}
-	}, [user]);
+	}));
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
 	const handleSubmit = async (e) => {
@@ -32,8 +30,8 @@ const Login = () => {
 	const handlePasswordChange = (e) => {
 		setPassword(e.target.value);
 	}
-	return <Fragment> { 
-		user ? <Fragment></Fragment> :
+	return <Fragment> {
+		user || user === undefined ? <Fragment></Fragment> :
 		<div>
 		Login Page
 		<form onSubmit={handleSubmit}>
