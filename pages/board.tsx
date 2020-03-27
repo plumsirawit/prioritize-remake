@@ -1,10 +1,9 @@
 import React, { useState, useEffect, Fragment, createRef, RefObject } from 'react';
 import Draggable, { DraggableCore, ControlPosition } from 'react-draggable';
-import firebaseConfig from '../firebase-config.json';
 import firebase, { FirebaseError } from 'firebase';
 import Router from 'next/router';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, DialogContentText, TextField, Popover, Typography, makeStyles, createStyles, Theme, useMediaQuery, useTheme, Checkbox } from '@material-ui/core';
-
+import { useFirebaseUser, logout, updateDB, deleteDB } from '../helpers/util';
 const VerticalLine = () => <div style={{ borderLeft: "2px solid black", height: "100%", position: "absolute", left: "50%", top: "0%" }}></div>;
 const HorizontalLine = () => <div style={{ borderTop: "2px solid black", width: "100%", position: "absolute", left: "0%", top: "50%" }}></div>;
 const TaskItem = (props) => {
@@ -150,25 +149,16 @@ const TaskItem = (props) => {
 	</Fragment>;
 }
 const Board = () => {
-	const [user, setUser] = useState<firebase.User | undefined | null>(undefined);
-	if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-	useEffect(() => firebase.auth().onAuthStateChanged(function (u) {
-		if(!u) Router.push('/login');
-		setUser(u);
-	}));
-	const logout = () => {
-		firebase.auth().signOut();
-	}
+	const user = useFirebaseUser();
+	useEffect(() => {
+		if(user === null) Router.push('/login');
+	}, [user]);
 	const [items, setItems] = useState([]);
-	const isFirebaseUser = (us: firebase.User | undefined | null) => {
-		return us ? true : false;
-	}
-	const updateDB = (docId, updData) => firebase.firestore().collection('tasks').doc(docId).update(updData);
-	const deleteDB = (docId) => firebase.firestore().collection('tasks').doc(docId).delete();
 	const [forceShowInfo, setForceShowInfo] = useState<boolean>(false);
 	useEffect(() => {
-		if (user && isFirebaseUser(user)) {
+		if (user) {
 			return firebase.firestore().collection('tasks').where("uid", "==", user.uid).onSnapshot((querySnapshot) => {
+				console.log('Currently on snapshot');
 				let curItems = [];
 				querySnapshot.forEach((doc) => {
 					curItems.push(<TaskItem key={doc.id} docId={doc.id} data={doc.data()} updateDB={updateDB} deleteDB={deleteDB} forceShowInfo={forceShowInfo}/>);
@@ -178,7 +168,7 @@ const Board = () => {
 		}
 	}, [user, forceShowInfo]);
 	const addTask = () => {
-		if (user && isFirebaseUser(user)) {
+		if (user) {
 			firebase.firestore().collection('tasks').add({
 				color: "#000000",
 				completed: "false",
@@ -192,7 +182,7 @@ const Board = () => {
 		}
 	}
 	return <Fragment>
-		<style>@import url('https://fonts.googleapis.com/css?family=Roboto&display=swap');</style>
+		<link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet"/>
 		{
 			!user ? <Fragment /> :
 				<div>
@@ -220,7 +210,6 @@ const Board = () => {
 							Display Names
 						</Typography>
 					</div>
-					
 					{items}
 				</div>
 		} </Fragment>;
