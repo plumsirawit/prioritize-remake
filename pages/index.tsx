@@ -56,6 +56,38 @@ const Index = () => {
 					align-items: center;
 					background: black;
 				}
+				@keyframes swing {
+					from {
+						transform: rotate(-20deg);
+					}
+
+					50%{
+						transform: rotate(20deg);
+					}
+				
+					to {
+					  	transform: rotate(-20deg);
+					}
+				}
+				  
+				.swing {
+					transform-origin: center center;
+					animation-name: swing;
+				}
+
+				.animated {
+					animation-duration: 0.75s;
+					animation-fill-mode: both;
+					animation-iteration-count: infinite;
+				}
+				
+				@media (print), (prefers-reduced-motion: reduce) {
+					.animated {
+						animation-duration: 1ms !important;
+						transition-duration: 1ms !important;
+						animation-iteration-count: 1 !important; 
+					}
+				}
 			`}</style>
 			{
 			user === null ? (
@@ -67,19 +99,42 @@ const Index = () => {
 						alignItems: "center",
 						justifyContent: "center"
 					}}>
-						<Button style={{
-							width: "40vmin",
-							height: "40vmin",
-							zIndex: 1,
+						<Paper style={{
+							width: "45vmin",
+							height: "45vmin",
 							position: "relative",
 							backgroundColor: "white",
 							borderRadius: "50%",
 							borderStyle: "solid",
 							borderWidth: "1px",
-							fontSize: "5vmin"
-						}} href="/login">
-							Prioritize
-						</Button>
+							fontSize: "5vmin",
+							display: "flex",
+							alignItems: "center",
+							justifyContent: "center"
+						}}>
+							<Paper style={{
+								width: "40vmin",
+								height: "40vmin",
+								position: "relative",
+								backgroundColor: "white",
+								borderRadius: "50%",
+								fontSize: "5vmin",
+								display: "flex",
+								alignItems: "center",
+								justifyContent: "center"
+							}} elevation={5}>
+								<Button style={{
+									width: "40vmin",
+									height: "40vmin",
+									position: "relative",
+									backgroundColor: "white",
+									borderRadius: "50%",
+									fontSize: "5vmin"
+								}} href="/login" className="animated infinite swing">
+									Prioritize
+								</Button>
+							</Paper>
+						</Paper>
 						<Button
 						style={{
 							width: "45vmin",
