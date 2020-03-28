@@ -1,5 +1,6 @@
 import firebaseConfig from '../firebase-config.json';
-import firebase, { FirebaseError } from 'firebase';
+import firebase from 'firebase/app';
+import 'firebase/auth';
 import { useState, useEffect } from 'react';
 export type NullableUndefinableUser = firebase.User | undefined | null;
 export const useFirebaseUser = () => {
@@ -28,4 +29,15 @@ export const vmin = (v) => {
 }
 export const vmax = (v) => {
     return Math.max(vh(v), vw(v));
+}
+export const mapCoordinateToScreen = (x, y) => {
+    return [x * vw(50), y * vh(50)];
+}
+export const getRandomColor = () => {
+    var letters = '0123456789ABCDEF';
+    var color = '#';
+    for (var i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
 }
