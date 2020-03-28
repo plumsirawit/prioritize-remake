@@ -2,7 +2,7 @@ import React, { Fragment, useState, useEffect } from 'react';
 import Router from 'next/router';
 import Link from 'next/link';
 import { useFirebaseUser, mapCoordinateToScreen, vmin, getRandomColor } from '../helpers/util';
-import { Button, IconButton } from '@material-ui/core';
+import { Button, IconButton, Paper, Typography } from '@material-ui/core';
 import AddIcon from '@material-ui/icons/Add';
 
 const Circle = (props) => {
@@ -59,37 +59,42 @@ const Index = () => {
 			`}</style>
 			{
 			user === null ? (
-				<div style={{
-					display: "flex",
-					flexDirection: "column",
-					alignItems: "center",
-					justifyContent: "center"
-				}}>
+				<Fragment>
 					{extraButtons}
-					<IconButton style={{
-						width: "40vmin",
-						height: "40vmin",
-						zIndex: 1,
-						position: "relative",
-						backgroundColor: "white",
-						borderRadius: "50%"
-					}} href="/login">
-						<AddIcon fontSize="large" style={{transform: "scale(3)"}}/>
-					</IconButton>
-					<Button
-					style={{
-						width: "45vmin",
-						zIndex: 1,
-						position: "relative",
-						backgroundColor: "white",
-						marginTop: "5vh"
-					}}
-					href="/register"
-					variant="contained"
-					>
-						Register
-					</Button>
-				</div>
+					<div style={{
+						display: "flex",
+						flexDirection: "column",
+						alignItems: "center",
+						justifyContent: "center"
+					}}>
+						<Button style={{
+							width: "40vmin",
+							height: "40vmin",
+							zIndex: 1,
+							position: "relative",
+							backgroundColor: "white",
+							borderRadius: "50%",
+							borderStyle: "solid",
+							borderWidth: "1px",
+							fontSize: "5vmin"
+						}} href="/login">
+							Prioritize
+						</Button>
+						<Button
+						style={{
+							width: "45vmin",
+							zIndex: 1,
+							position: "relative",
+							backgroundColor: "white",
+							marginTop: "5vh"
+						}}
+						href="/register"
+						variant="contained"
+						>
+							Register
+						</Button>
+					</div>
+				</Fragment>
 			) : <Fragment />
 			}
 		</Fragment>
