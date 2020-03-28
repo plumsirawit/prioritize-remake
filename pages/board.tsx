@@ -225,7 +225,7 @@ const Board = () => {
 		}
 	}
 	return <Fragment>
-		<link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet" />
+		<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
 		{
 			!user ? <Fragment /> :
 				<div>
