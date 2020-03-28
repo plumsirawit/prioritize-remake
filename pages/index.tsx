@@ -2,8 +2,10 @@ import React, { Fragment, useState, useEffect } from 'react';
 import Router from 'next/router';
 import Link from 'next/link';
 import { useFirebaseUser, mapCoordinateToScreen, vmin, getRandomColor } from '../helpers/util';
-import { Button, IconButton, Paper, Typography } from '@material-ui/core';
-import AddIcon from '@material-ui/icons/Add';
+import { Button, IconButton, Paper, Typography, TextField } from '@material-ui/core';
+import ArrowBackIcon from '@material-ui/icons/ArrowBack';
+import firebase from 'firebase/app';
+import 'firebase/auth';
 
 const Circle = (props) => {
 	const [x, setX] = useState<number>(0);
@@ -42,6 +44,14 @@ const Circle = (props) => {
 	>
 	</div>
 }
+enum ApplicationState {
+	INIT,
+	PANELI,
+	PANELL,
+	PANELR,
+	LOGIN,
+	REGIS
+}
 const MainButton = (props) => {
 	return <Paper style={{
 		width: "45vmin",
@@ -55,7 +65,7 @@ const MainButton = (props) => {
 		display: "flex",
 		alignItems: "center",
 		justifyContent: "center"
-	}} className={props.rightPanelActivated ? "animated moveLeft" : ""}>
+	}} className={props.appState === ApplicationState.PANELI ? "animated moveLeft" : props.appState !== ApplicationState.INIT ? "stayLeft" : ""}>
 		<Paper style={Object.assign({
 			width: "40vmin",
 			height: "40vmin",
@@ -66,7 +76,7 @@ const MainButton = (props) => {
 			display: "flex",
 			alignItems: "center",
 			justifyContent: "center",
-		}, props.rightPanelActivated ? {boxShadow: "none"} : {})
+		}, props.appState !== ApplicationState.INIT ? { boxShadow: "none" } : {})
 		} elevation={5}>
 			<Button style={{
 				width: "40vmin",
@@ -76,27 +86,43 @@ const MainButton = (props) => {
 				borderRadius: "50%",
 				fontSize: "5vmin",
 				color: "black"
-			}} onClick={props.onClick} className={"animated infinite " + (props.rightPanelActivated ? "stopSwing" : "swing")} disabled={props.rightPanelActivated}>
+			}} onClick={props.onClick} className={"animated infinite " + (props.appState !== ApplicationState.INIT ? "stopSwing" : "swing")} disabled={props.appState !== ApplicationState.INIT}>
 				Prioritize
 			</Button>
 		</Paper>
 	</Paper>;
 }
 const RightPanel = (props) => {
+	let currentClass = "";
+	switch (props.appState) {
+		case ApplicationState.INIT:
+			currentClass = "";
+			break;
+		case ApplicationState.PANELI:
+			currentClass = "animated fadeInLeft";
+			break;
+		case ApplicationState.PANELL:
+		case ApplicationState.PANELR:
+			currentClass = "animated fadeInRight";
+			break;
+		default:
+			currentClass = "animated fadeOutRight";
+	}
 	return <Paper style={{
-		visibility: props.show ? "visible" : "hidden",
+		visibility: "hidden",
+		opacity: 0,
 		position: "absolute",
 		display: "flex",
 		flexDirection: "column",
 		width: "45vmin",
 		padding: "10px"
-	}} className={props.show ? "animated fadeInLeft" : ""}>
+	}} className={currentClass}>
 		<Button
 			style={{
 				position: "relative",
 				height: "10vh"
 			}}
-			href="/login"
+			onClick={props.handleLogin}
 			variant="outlined"
 			size="large"
 		>
@@ -108,7 +134,7 @@ const RightPanel = (props) => {
 				marginTop: "10px",
 				height: "10vh"
 			}}
-			href="/register"
+			onClick={props.handleRegister}
 			variant="outlined"
 			size="large"
 		>
@@ -116,10 +142,203 @@ const RightPanel = (props) => {
 		</Button>
 	</Paper>
 }
+const LoginFragment = (props) => {
+	const user = useFirebaseUser();
+	useEffect(() => {
+		if (user) Router.push('/board');
+	}, [user]);
+	const [email, setEmail] = useState<string>('');
+	const [password, setPassword] = useState<string>('');
+	const handleSubmit = async (e) => {
+		e.preventDefault();
+		firebase.auth().signInWithEmailAndPassword(email, password).then(() => { }).catch((error) => {
+			var errorCode = error.code;
+			var errorMessage = error.message;
+			console.log('ERROR', errorCode, errorMessage);
+		});
+	}
+	const handleEmailChange = (e) => setEmail(e.target.value);
+	const handlePasswordChange = (e) => setPassword(e.target.value);
+	return <div
+		style={{
+			width: "45vmin",
+			display: "flex",
+			alignItems: "center",
+			justifyContent: "center",
+			flexDirection: "column",
+			padding: "20px"
+		}}
+	>
+		<Typography variant="h3">Login</Typography>
+		<form onSubmit={handleSubmit}
+			style={{
+				display: "flex",
+				alignItems: "center",
+				justifyContent: "center",
+				flexDirection: "column",
+				width: "100%",
+				padding: "10px 10px 0px 10px"
+			}}
+		>
+			<TextField
+				style={{
+					marginBottom: "20px"
+				}}
+				fullWidth label="Email" type="email" value={email} onChange={handleEmailChange} />
+			<TextField
+				style={{
+					marginBottom: "20px"
+				}}
+				fullWidth label="Password" type="password" value={password} onChange={handlePasswordChange} />
+			<Button
+				style={{
+					marginTop: "60px",
+					width: "100%"
+				}}
+				variant="contained" color="primary" type="submit">Login</Button>
+		</form>
+	</div>;
+}
+const RegisFragment = (props) => {
+	const user = useFirebaseUser();
+	useEffect(() => {
+		if (user) Router.push('/board');
+	}, [user]);
+	const [email, setEmail] = useState<string>('');
+	const [password, setPassword] = useState<string>('');
+	const handleSubmit = async (e) => {
+		e.preventDefault();
+		firebase.auth().createUserWithEmailAndPassword(email, password).then(() => {
+			console.log('OK');
+			alert('OK');
+		}).catch((error) => {
+			var errorCode = error.code;
+			var errorMessage = error.message;
+			console.log(errorCode, errorMessage);
+		});
+	}
+	const handleEmailChange = (e) => setEmail(e.target.value);
+	const handlePasswordChange = (e) => setPassword(e.target.value);
+	return <div
+		style={{
+			width: "45vmin",
+			display: "flex",
+			alignItems: "center",
+			justifyContent: "center",
+			flexDirection: "column",
+			padding: "20px"
+		}}
+	>
+		<Typography variant="h3">Registration</Typography>
+		<form onSubmit={handleSubmit}
+			style={{
+				display: "flex",
+				alignItems: "center",
+				justifyContent: "center",
+				flexDirection: "column",
+				width: "100%",
+				padding: "10px 10px 0px 10px"
+			}}
+		>
+			<TextField
+				style={{
+					marginBottom: "20px"
+				}}
+				fullWidth label="Email" type="email" value={email} onChange={handleEmailChange} />
+			<TextField
+				style={{
+					marginBottom: "20px"
+				}}
+				fullWidth label="Password" type="password" value={password} onChange={handlePasswordChange} />
+			<Button
+				style={{
+					marginTop: "60px",
+					width: "100%"
+				}}
+				variant="contained" color="primary" type="submit">Register</Button>
+		</form>
+	</div>;
+}
+const LoginPanel = (props) => {
+	let currentClass = "";
+	switch (props.appState) {
+		case ApplicationState.PANELL:
+			currentClass = "animated fadeOutRight";
+			break;
+		case ApplicationState.LOGIN:
+			currentClass = "animated fadeInRight";
+			break;
+		default:
+			currentClass = "";
+	}
+	return <Paper style={{
+		visibility: "hidden",
+		opacity: 0,
+		position: "absolute",
+		display: "flex",
+		flexDirection: "row",
+		padding: "10px"
+	}} className={currentClass}>
+		<LoginFragment />
+	</Paper>;
+}
+const RegisterPanel = (props) => {
+	let currentClass = "";
+	switch (props.appState) {
+		case ApplicationState.PANELR:
+			currentClass = "animated fadeOutRight";
+			break;
+		case ApplicationState.REGIS:
+			currentClass = "animated fadeInRight";
+			break;
+		default:
+			currentClass = "";
+	}
+	return <Paper style={{
+		visibility: "hidden",
+		opacity: 0,
+		position: "absolute",
+		display: "flex",
+		flexDirection: "column",
+		padding: "10px"
+	}} className={currentClass}>
+		<RegisFragment />
+	</Paper>
+}
+const BackArrow = (props) => {
+	let currentClass = "";
+	switch (props.appState) {
+		case ApplicationState.PANELL:
+		case ApplicationState.PANELR:
+			currentClass = "animated fadeOutArrow";
+			break;
+		case ApplicationState.REGIS:
+		case ApplicationState.LOGIN:
+			currentClass = "animated fadeInArrow";
+			break;
+		default:
+			currentClass = "";
+	}
+	return <Paper style={{
+		margin: "auto",
+		visibility: "hidden",
+		opacity: 0,
+		position: "absolute",
+		display: "flex",
+		flexDirection: "row",
+		padding: "10px",
+		borderRadius: "50%"
+	}} className={currentClass}>
+		<IconButton onClick={props.onClick}>
+			<ArrowBackIcon />
+		</IconButton>
+	</Paper>;
+}
 const Index = () => {
 	const user = useFirebaseUser();
 	if (user) Router.push('/board');
 	const [extraButtons, setExtraButtons] = useState<Array<JSX.Element>>([]);
+	const [applicationState, setApplicationState] = useState<ApplicationState>(ApplicationState.INIT);
 	useEffect(() => {
 		// Random is impure... only use inside effect.
 		const createButton = (idx) => {
@@ -134,10 +353,22 @@ const Index = () => {
 			setExtraButtons(extraButtons);
 		}
 	}, []);
-	const [showRightPanel, setShowRightPanel] = useState<boolean>(false);
 	const handleClick = () => {
 		console.log('Button clicked');
-		setShowRightPanel(true);
+		setApplicationState(ApplicationState.PANELI);
+	}
+	const handleLogin = () => {
+		console.log('Handling Login');
+		setApplicationState(ApplicationState.LOGIN);
+	}
+	const handleRegister = () => {
+		console.log('Handling Registration');
+		setApplicationState(ApplicationState.REGIS);
+	}
+	const handleBack = () => {
+		console.log('Handling Back');
+		if(applicationState === ApplicationState.LOGIN) setApplicationState(ApplicationState.PANELL);
+		else setApplicationState(ApplicationState.PANELR);
 	}
 	return (
 		<Fragment>
@@ -199,33 +430,111 @@ const Index = () => {
 				}
 				@keyframes fadeInLeft {
 					from {
-					  opacity: 0;
-					  transform: translate3d(0, 0, 0);
+						opacity: 0;
+						transform: translate3d(0, 0, 0);
+						visibility: hidden;
 					}
 				  
 					to {
-					  opacity: 1;
-					  transform: translate3d(30vmin, 0, 0);
+						opacity: 1;
+						transform: translate3d(30vmin, 0, 0);
+						visibility: visible;
 					}
-				  }
+				}
 				  
-				  .fadeInLeft {
+				.fadeInLeft {
 					animation-name: fadeInLeft;
-				  }
-
-				  @keyframes moveLeft {
+				}
+				
+				@keyframes fadeInRight {
 					from {
-					  transform: translate3d(0, 0, 0);
+						opacity: 0;
+						transform: translate3d(100%, 0, 0);
+						visibility: hidden;
 					}
 				  
 					to {
-					  transform: translate3d(-30vmin, 0, 0);
+						opacity: 1;
+						transform: translate3d(30vmin, 0, 0);
+						visibility: visible;
 					}
-				  }
+				}
 				  
-				  .moveLeft {
+				.fadeInRight {
+					animation-name: fadeInRight;
+				}
+
+				@keyframes fadeInArrow {
+					from {
+						opacity: 0;
+						transform: translate3d(100%, 0, 0);
+						visibility: hidden;
+					}
+				  
+					to {
+						opacity: 1;
+						transform: translate3d(0, 0, 0);
+						visibility: visible;
+					}
+				}
+				  
+				.fadeInArrow {
+					animation-name: fadeInArrow;
+				}
+
+				@keyframes fadeOutArrow {
+					from {
+						opacity: 1;
+						transform: translate3d(0, 0, 0);
+						visibility: visible;
+					}
+				  
+					to {
+					  	opacity: 0;
+						transform: translate3d(100%, 0, 0);
+						visibility: hidden;
+					}
+				}
+				  
+				.fadeOutArrow {
+					animation-name: fadeOutArrow;
+				}
+
+				@keyframes fadeOutRight {
+					from {
+						opacity: 1;
+						transform: translate3d(30vmin, 0, 0);
+						visibility: visible;
+					}
+				  
+					to {
+					  	opacity: 0;
+						transform: translate3d(100%, 0, 0);
+						visibility: hidden;
+					}
+				}
+				  
+				.fadeOutRight {
+					animation-name: fadeOutRight;
+				}
+
+				@keyframes moveLeft {
+					from {
+						transform: translate3d(0, 0, 0);
+					}
+				  
+					to {
+						transform: translate3d(-30vmin, 0, 0);
+					}
+				}
+				  
+				.moveLeft {
 					animation-name: moveLeft;
-				  }
+				}
+				  
+				.stayLeft {
+					transform: translate3d(-30vmin, 0, 0);
+				}
 			`}</style>
 			{
 				user === null ? (
@@ -237,8 +546,11 @@ const Index = () => {
 							alignItems: "center",
 							justifyContent: "center"
 						}}>
-							<MainButton onClick={handleClick} rightPanelActivated={showRightPanel} />
-							<RightPanel show={showRightPanel} />
+							<MainButton onClick={handleClick} appState={applicationState} />
+							<RightPanel appState={applicationState} handleLogin={handleLogin} handleRegister={handleRegister} />
+							<BackArrow appState={applicationState} onClick={handleBack}/>
+							<LoginPanel appState={applicationState} />
+							<RegisterPanel appState={applicationState} />
 						</div>
 					</Fragment>
 				) : <Fragment />

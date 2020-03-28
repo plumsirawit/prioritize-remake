@@ -4,7 +4,9 @@ import 'firebase/auth';
 import { useState, useEffect } from 'react';
 export type NullableUndefinableUser = firebase.User | undefined | null;
 export const useFirebaseUser = () => {
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    useEffect(() => {
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    });
     const [user, setUser] = useState<NullableUndefinableUser>(undefined);
     useEffect(() => firebase.auth().onAuthStateChanged(function (u) {
         setUser(u);

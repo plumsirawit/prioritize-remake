@@ -195,7 +195,7 @@ const TaskItem = (props) => {
 const Board = () => {
 	const user = useFirebaseUser();
 	useEffect(() => {
-		if (user === null) Router.push('/login');
+		if (user === null) Router.push('/');
 	}, [user]);
 	const [items, setItems] = useState([]);
 	const [forceShowInfo, setForceShowInfo] = useState<boolean>(false);
