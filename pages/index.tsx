@@ -2,8 +2,8 @@ import React, { Fragment, useState, useEffect } from 'react';
 import Router from 'next/router';
 import Link from 'next/link';
 import { useFirebaseUser, mapCoordinateToScreen, vmin, getRandomColor } from '../helpers/util';
-import { IconButton } from '@material-ui/core';
-import ExitToAppIcon from '@material-ui/icons/ExitToApp';
+import { Button, IconButton } from '@material-ui/core';
+import AddIcon from '@material-ui/icons/Add';
 
 const Circle = (props) => {
 	const [x, y] = mapCoordinateToScreen(props.x, props.y);
@@ -45,6 +45,7 @@ const Index = () => {
 	}
 	return (
 		<Fragment>
+			<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
 			<style jsx global>{`
 				body {
 					overflow: hidden;
@@ -58,7 +59,12 @@ const Index = () => {
 			`}</style>
 			{
 			user === null ? (
-				<Fragment>
+				<div style={{
+					display: "flex",
+					flexDirection: "column",
+					alignItems: "center",
+					justifyContent: "center"
+				}}>
 					{extraButtons}
 					<IconButton style={{
 						width: "40vmin",
@@ -68,10 +74,23 @@ const Index = () => {
 						backgroundColor: "white",
 						borderRadius: "50%"
 					}} href="/login">
-						<ExitToAppIcon fontSize="large" style={{transform: "scale(3)"}}/>
+						<AddIcon fontSize="large" style={{transform: "scale(3)"}}/>
 					</IconButton>
-				</Fragment>
-			) : <Fragment></Fragment>
+					<Button
+					style={{
+						width: "45vmin",
+						zIndex: 1,
+						position: "relative",
+						backgroundColor: "white",
+						marginTop: "5vh"
+					}}
+					href="/register"
+					variant="contained"
+					>
+						Register
+					</Button>
+				</div>
+			) : <Fragment />
 			}
 		</Fragment>
 	)
